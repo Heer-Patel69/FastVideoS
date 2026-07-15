@@ -89,7 +89,22 @@ const COBALT_INSTANCES = [
   "https://cobalt-api.v0.pw",
 ];
 
-async function callCobaltInstance(instanceUrl: string, url: string, downloadMode: "auto" | "audio") {
+interface CobaltResponse {
+  status: "tunnel" | "redirect" | "picker" | "error";
+  url?: string;
+  filename?: string;
+  picker?: Array<{
+    url: string;
+    type: "photo" | "video";
+    filename?: string;
+  }>;
+  text?: string;
+  error?: {
+    code: string;
+  };
+}
+
+async function callCobaltInstance(instanceUrl: string, url: string, downloadMode: "auto" | "audio"): Promise<CobaltResponse> {
   const headers: Record<string, string> = {
     "Accept": "application/json",
     "Content-Type": "application/json",
@@ -100,7 +115,7 @@ async function callCobaltInstance(instanceUrl: string, url: string, downloadMode
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout per instance
+  const timeoutId = setTimeout(() => controller.abort(), 4500); // 4.5s timeout per instance
 
   try {
     const response = await fetch(instanceUrl, {
@@ -116,7 +131,7 @@ async function callCobaltInstance(instanceUrl: string, url: string, downloadMode
     });
 
     const responseText = await response.text();
-    let responseData;
+    let responseData: CobaltResponse;
     try {
       responseData = JSON.parse(responseText);
     } catch {
@@ -135,32 +150,39 @@ async function callCobaltInstance(instanceUrl: string, url: string, downloadMode
   }
 }
 
-async function callCobalt(url: string, downloadMode: "auto" | "audio") {
+async function callCobalt(url: string, downloadMode: "auto" | "audio"): Promise<CobaltResponse> {
   // If the user configured a private custom self-hosted instance, use it exclusively
   if (process.env.COBALT_API_URL && process.env.COBALT_API_URL !== "https://api.cobalt.tools") {
     return callCobaltInstance(process.env.COBALT_API_URL, url, downloadMode);
   }
 
-  // Rotate through the public cluster
-  let lastError = new Error("Failed to communicate with download service.");
-  for (const instance of COBALT_INSTANCES) {
-    try {
-      return await callCobaltInstance(instance, url, downloadMode);
-    } catch (e) {
-      console.warn(`Cobalt instance ${instance} failed:`, e);
-      lastError = e instanceof Error ? e : new Error(String(e));
-      
-      const errorMsg = lastError.message;
-      if (
-        errorMsg.includes("error.api.invalid_url") || 
-        errorMsg.includes("error.api.url_invalid") ||
-        errorMsg.includes("400")
-      ) {
-        throw lastError;
+  // Query all public instances in parallel, returning the first one that successfully resolves
+  const promises = COBALT_INSTANCES.map((instance) =>
+    callCobaltInstance(instance, url, downloadMode)
+  );
+
+  try {
+    return await Promise.any(promises);
+  } catch (err) {
+    console.error("All Cobalt instances failed in parallel:", err);
+
+    // If it's an AggregateError, look for a specific invalid URL / client-input error
+    if (err && typeof err === "object" && "errors" in err) {
+      const aggregateErr = err as { errors: Error[] };
+      const clientError = aggregateErr.errors.find((e) =>
+        e.message.includes("error.api.invalid_url") ||
+        e.message.includes("error.api.url_invalid") ||
+        e.message.includes("400")
+      );
+      if (clientError) {
+        throw clientError;
       }
     }
+
+    throw new Error(
+      "All download service instances are currently rate-limited or offline. Please try again in a few minutes."
+    );
   }
-  throw lastError;
 }
 
 // Tokenless metadata fetcher for Instagram, TikTok, and Twitter/X
@@ -394,7 +416,7 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
             title = val.filename;
           }
           hasMedia = true;
-        } else if (val.status === "picker") {
+        } else if (val.status === "picker" && val.picker && Array.isArray(val.picker)) {
           // Handle carousel posts (like TikTok/Instagram image carousels)
           val.picker.forEach((item: { url: string; type: string; filename?: string }, idx: number) => {
             formats.push({
