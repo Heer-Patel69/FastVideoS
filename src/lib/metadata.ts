@@ -112,4 +112,7 @@ export const defaultMetadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  verification: {
+    google: "google56f1319c653e0d2e",
+  },
 };
