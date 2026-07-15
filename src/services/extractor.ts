@@ -32,6 +32,10 @@ interface InvidiousInstanceMeta {
   api: boolean;
   type: string;
   uptime?: number;
+  monitor?: {
+    down: boolean;
+    uptime?: number;
+  };
 }
 
 async function getHealthyInvidiousInstances(): Promise<string[]> {
@@ -48,17 +52,21 @@ async function getHealthyInvidiousInstances(): Promise<string[]> {
         const instances = data
           .filter((pair: [string, InvidiousInstanceMeta]) => {
             const meta = pair[1];
-            return meta && meta.api === true && meta.type === "https";
+            return meta && meta.type === "https" && (!meta.monitor || !meta.monitor.down);
           })
           .map((pair: [string, InvidiousInstanceMeta]) => {
+            const domain = pair[0];
             try {
-              return new URL(pair[0]).hostname;
+              if (domain.includes("://")) {
+                return new URL(domain).hostname;
+              }
+              return domain;
             } catch {
-              return "";
+              return domain || "";
             }
           })
           .filter((hostname: string) => hostname !== "")
-          .slice(0, 10); // Use top 10 healthy instances
+          .slice(0, 12);
 
         if (instances.length > 0) {
           return instances;
@@ -71,14 +79,89 @@ async function getHealthyInvidiousInstances(): Promise<string[]> {
     clearTimeout(timeoutId);
   }
 
-  // Fallback to hardcoded list if API call fails
+  // Fallback to wider list of active/working Invidious public instances if API fails
   return [
+    "invidious.nerdvpn.de",
+    "invidious.tiekoetter.com",
+    "inv.nadeko.net",
     "yewtu.be",
     "invidious.flokinet.to",
-    "inv.tux.im",
-    "vid.puffyan.us",
-    "invidious.io",
+    "yt.chocolatemoo53.com",
+    "inv.zoomerville.com"
   ];
+}
+
+async function fetchFromInvidious(instance: string, videoId: string, url: string): Promise<MediaInfo> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4500); // 4.5s timeout per request
+
+  try {
+    const response = await fetch(
+      `https://${instance}/api/v1/videos/${videoId}?local=true`,
+      { signal: controller.signal }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Invidious instance ${instance} returned status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const formats: MediaFormat[] = [];
+
+    // 1. Add formatStreams (progressive formats with both video + audio)
+    if (data.formatStreams && Array.isArray(data.formatStreams)) {
+      data.formatStreams.forEach((stream: { url: string; quality?: string; container?: string }) => {
+        let streamUrl = stream.url;
+        if (streamUrl && streamUrl.startsWith("/")) {
+          streamUrl = `https://${instance}${streamUrl}`;
+        }
+        formats.push({
+          quality: stream.quality || "360p",
+          format: "MP4",
+          size: "Download",
+          hasAudio: true,
+          url: streamUrl,
+          filename: `${data.title || "video"}.mp4`,
+        });
+      });
+    }
+
+    // 2. Add adaptiveFormats (audio-only formats)
+    if (data.adaptiveFormats && Array.isArray(data.adaptiveFormats)) {
+      data.adaptiveFormats.forEach((stream: { url: string; type?: string; audioBitrate?: number }) => {
+        if (stream.type && stream.type.startsWith("audio/")) {
+          let streamUrl = stream.url;
+          if (streamUrl && streamUrl.startsWith("/")) {
+            streamUrl = `https://${instance}${streamUrl}`;
+          }
+          formats.push({
+            quality: `${stream.audioBitrate || 128}kbps`,
+            format: "MP3",
+            size: "Audio Track",
+            hasAudio: true,
+            url: streamUrl,
+            filename: `${data.title || "audio"}.mp3`,
+          });
+        }
+      });
+    }
+
+    if (formats.length === 0) {
+      throw new Error(`No formats available on instance ${instance}`);
+    }
+
+    return {
+      url,
+      platform: "youtube",
+      title: data.title || "YouTube Video",
+      thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+      duration: formatDuration(data.lengthSeconds),
+      author: data.author || "YouTube Creator",
+      formats,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 const COBALT_INSTANCES = [
@@ -284,78 +367,19 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
   if (platform === "youtube") {
     const videoId = extractYoutubeId(url);
     if (videoId) {
-      const instances = await getHealthyInvidiousInstances();
-      for (const instance of instances) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-          const response = await fetch(
-            `https://${instance}/api/v1/videos/${videoId}?local=true`,
-            { signal: controller.signal }
-          );
-          clearTimeout(timeoutId);
-
-          if (response.ok) {
-            const data = await response.json();
-            const formats: MediaFormat[] = [];
-
-            // 1. Add formatStreams (progressive formats with both video + audio)
-            if (data.formatStreams && Array.isArray(data.formatStreams)) {
-              data.formatStreams.forEach((stream: { url: string; quality?: string; container?: string }) => {
-                let streamUrl = stream.url;
-                if (streamUrl && streamUrl.startsWith("/")) {
-                  streamUrl = `https://${instance}${streamUrl}`;
-                }
-                formats.push({
-                  quality: stream.quality || "360p",
-                  format: "MP4",
-                  size: "Download",
-                  hasAudio: true,
-                  url: streamUrl,
-                  filename: `${data.title || "video"}.mp4`,
-                });
-              });
-            }
-
-            // 2. Add adaptiveFormats (audio-only formats)
-            if (data.adaptiveFormats && Array.isArray(data.adaptiveFormats)) {
-              data.adaptiveFormats.forEach((stream: { url: string; type?: string; audioBitrate?: number }) => {
-                if (stream.type && stream.type.startsWith("audio/")) {
-                  let streamUrl = stream.url;
-                  if (streamUrl && streamUrl.startsWith("/")) {
-                    streamUrl = `https://${instance}${streamUrl}`;
-                  }
-                  formats.push({
-                    quality: `${stream.audioBitrate || 128}kbps`,
-                    format: "MP3",
-                    size: "Audio Track",
-                    hasAudio: true,
-                    url: streamUrl,
-                    filename: `${data.title || "audio"}.mp3`,
-                  });
-                }
-              });
-            }
-
-            if (formats.length > 0) {
-              return {
-                success: true,
-                data: {
-                  url,
-                  platform: "youtube",
-                  title: data.title || "YouTube Video",
-                  thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                  duration: formatDuration(data.lengthSeconds),
-                  author: data.author || "YouTube Creator",
-                  formats,
-                },
-              };
-            }
-          }
-        } catch (e) {
-          console.warn(`Invidious instance ${instance} failed:`, e);
-        }
+      try {
+        const instances = await getHealthyInvidiousInstances();
+        // Query top 8 healthy instances in parallel to guarantee fast response under Vercel 10s timeout
+        const promises = instances.slice(0, 8).map((instance) =>
+          fetchFromInvidious(instance, videoId, url)
+        );
+        const result = await Promise.any(promises);
+        return {
+          success: true,
+          data: result,
+        };
+      } catch (e) {
+        console.warn("All parallel Invidious instances failed for YouTube bypass. Proceeding to Cobalt fallback.", e);
       }
     }
   }
