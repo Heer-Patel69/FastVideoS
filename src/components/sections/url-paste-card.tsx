@@ -177,91 +177,167 @@ export function UrlPasteCard() {
 
           {/* Results */}
           {data && (
-            <div className="mt-6 space-y-4 border-t border-border pt-6">
-              {/* Media info */}
-              <div className="flex gap-4">
-                <div className="relative flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-40 select-none">
-                  {data.thumbnail && !data.thumbnail.includes("placehold.co") ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={data.thumbnail}
-                      alt={data.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
+            <div className="mt-6 border-t border-border pt-6">
+              {data.formats.some((f) => f.format.toUpperCase() === "MP4") ? (
+                // Split layout for videos with interactive player
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                  {/* Left: Video Player */}
+                  <div className="md:col-span-5 flex flex-col items-center justify-center w-full">
                     <div
                       className={cn(
-                        "absolute inset-0 flex items-center justify-center text-[10px] font-bold tracking-wider text-white uppercase",
-                        data.platform === "instagram" && "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]",
-                        data.platform === "youtube" && "bg-gradient-to-tr from-[#ff0000] to-[#b30000]",
-                        data.platform === "twitter" && "bg-gradient-to-tr from-[#0f1419] to-[#272c30]",
-                        data.platform === "tiktok" && "bg-gradient-to-tr from-[#010101] via-[#10b981] to-[#ec4899]",
-                        data.platform === "facebook" && "bg-gradient-to-tr from-[#1877f2] to-[#0d52b8]",
-                        data.platform === "soundcloud" && "bg-gradient-to-tr from-[#ff5500] to-[#ff2200]",
-                        data.platform === "reddit" && "bg-gradient-to-tr from-[#ff4500] to-[#b33000]"
+                        "w-full overflow-hidden rounded-2xl bg-black border border-border/80 shadow-xl relative flex items-center justify-center",
+                        (data.platform === "instagram" || data.platform === "tiktok")
+                          ? "max-w-[240px] aspect-[9/16]"
+                          : "aspect-video"
                       )}
                     >
-                      <div className="rounded bg-black/25 px-2 py-0.5 backdrop-blur-sm">
-                        {platformLabels[data.platform] || data.platform}
-                      </div>
+                      <video
+                        src={data.formats.find((f) => f.format.toUpperCase() === "MP4")?.url}
+                        poster={data.thumbnail && !data.thumbnail.includes("placehold.co") ? data.thumbnail : undefined}
+                        controls
+                        playsInline
+                        className="h-full w-full object-contain"
+                      />
                     </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-sm font-semibold text-foreground">
-                    {data.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {data.author} · {data.duration}
-                  </p>
-                  <span
-                    className={cn(
-                      "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                      platformColors[data.platform] || "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {platformLabels[data.platform] || data.platform}
-                  </span>
-                </div>
-              </div>
+                  </div>
 
-              {/* Format options */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Available Formats
-                </h4>
-                <div className="grid gap-2">
-                  {data.formats.map((format: MediaFormat, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        {format.format === "MP3" || format.format === "M4A" ? (
-                          <Music className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Film className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <div>
-                          <span className="text-sm font-medium text-foreground">
-                            {format.quality}
-                          </span>
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            {format.format} · {format.size}
-                          </span>
-                        </div>
+                  {/* Right: Info and Download Buttons */}
+                  <div className="md:col-span-7 flex flex-col space-y-4">
+                    <div className="space-y-2">
+                      <div>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                            platformColors[data.platform] || "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {platformLabels[data.platform] || data.platform}
+                        </span>
                       </div>
-                      <a
-                        href={`/api/download?url=${encodeURIComponent(format.url || "")}&filename=${encodeURIComponent(format.filename || "download")}`}
-                        className="flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                      >
-                        <Download className="h-3 w-3" />
-                        Download
-                      </a>
+                      <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-2">
+                        {data.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        By {data.author} {data.duration && `· ${data.duration}`}
+                      </p>
                     </div>
-                  ))}
+
+                    {/* Download buttons stack */}
+                    <div className="space-y-2 pt-2">
+                      {data.formats.map((format: MediaFormat, index: number) => (
+                        <a
+                          key={index}
+                          href={`/api/download?url=${encodeURIComponent(format.url || "")}&filename=${encodeURIComponent(format.filename || "download")}`}
+                          className={cn(
+                            "flex w-full h-11 items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 active:scale-[0.98] text-sm",
+                            index === 0
+                              ? "bg-primary text-primary-foreground hover:bg-primary/95 shadow-md shadow-primary/10"
+                              : "bg-muted text-foreground hover:bg-muted/80 border border-border"
+                          )}
+                        >
+                          <Download className="h-4 w-4" />
+                          Download {format.format === "MP3" || format.format === "M4A" ? "Audio" : "Video"} ({format.quality})
+                        </a>
+                      ))}
+
+                      <button
+                        onClick={handleClear}
+                        className="flex w-full h-11 items-center justify-center gap-2 rounded-xl bg-background border border-border text-muted-foreground hover:bg-muted/30 hover:text-foreground font-medium transition-all duration-200 text-sm mt-2"
+                      >
+                        Download Another
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                // Standard layout for audio/others
+                <div className="space-y-4">
+                  {/* Media info */}
+                  <div className="flex gap-4">
+                    <div className="relative flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-40 select-none">
+                      {data.thumbnail && !data.thumbnail.includes("placehold.co") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={data.thumbnail}
+                          alt={data.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={cn(
+                            "absolute inset-0 flex items-center justify-center text-[10px] font-bold tracking-wider text-white uppercase",
+                            data.platform === "instagram" && "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]",
+                            data.platform === "youtube" && "bg-gradient-to-tr from-[#ff0000] to-[#b30000]",
+                            data.platform === "twitter" && "bg-gradient-to-tr from-[#0f1419] to-[#272c30]",
+                            data.platform === "tiktok" && "bg-gradient-to-tr from-[#010101] via-[#10b981] to-[#ec4899]",
+                            data.platform === "facebook" && "bg-gradient-to-tr from-[#1877f2] to-[#0d52b8]",
+                            data.platform === "soundcloud" && "bg-gradient-to-tr from-[#ff5500] to-[#ff2200]",
+                            data.platform === "reddit" && "bg-gradient-to-tr from-[#ff4500] to-[#b33000]"
+                          )}
+                        >
+                          <div className="rounded bg-black/25 px-2 py-0.5 backdrop-blur-sm">
+                            {platformLabels[data.platform] || data.platform}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-semibold text-foreground">
+                        {data.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {data.author} · {data.duration}
+                      </p>
+                      <span
+                        className={cn(
+                          "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                          platformColors[data.platform] || "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {platformLabels[data.platform] || data.platform}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Format options */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Available Formats
+                    </h4>
+                    <div className="grid gap-2">
+                      {data.formats.map((format: MediaFormat, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
+                        >
+                          <div className="flex items-center gap-3">
+                            {format.format === "MP3" || format.format === "M4A" ? (
+                              <Music className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <Film className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <div>
+                              <span className="text-sm font-medium text-foreground">
+                                {format.quality}
+                              </span>
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {format.format} · {format.size}
+                              </span>
+                            </div>
+                          </div>
+                          <a
+                            href={`/api/download?url=${encodeURIComponent(format.url || "")}&filename=${encodeURIComponent(format.filename || "download")}`}
+                            className="flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
