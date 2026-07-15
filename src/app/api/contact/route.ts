@@ -5,7 +5,7 @@ import { checkRateLimit, getClientIp } from "@/services/rate-limiter";
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    const rateLimit = checkRateLimit(`contact:${ip}`, {
+    const rateLimit = await checkRateLimit(`contact:${ip}`, {
       maxRequests: 5,
       windowMs: 60 * 60 * 1000,
     });
