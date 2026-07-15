@@ -164,13 +164,76 @@ async function fetchFromInvidious(instance: string, videoId: string, url: string
   }
 }
 
-const COBALT_INSTANCES = [
-  "https://api.cobalt.tools",
-  "https://co.wuk.sh",
-  "https://cobalt.kwi.cat",
-  "https://cobalt.q1.is",
-  "https://cobalt-api.v0.pw",
-];
+async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+  try {
+    const res = await fetch("https://cobalt.directory/api/working?type=api", {
+      signal: controller.signal,
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data && Array.isArray(json.data[platform])) {
+        const activeInstances = json.data[platform].filter((url: string) => url && url.startsWith("http"));
+        if (activeInstances.length > 0) {
+          return activeInstances;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to fetch working Cobalt instances for ${platform}:`, error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  // Fallback lists if the API is down or rate-limited
+  const fallbacks: Record<string, string[]> = {
+    youtube: [
+      "https://api.cobalt.liubquanti.click",
+      "https://grapefruit.clxxped.lol",
+      "https://api.qwkuns.me",
+      "https://nuko-c.meowing.de",
+      "https://api-cobalt.eversiege.network",
+      "https://subito-c.meowing.de",
+    ],
+    "youtube-shorts": [
+      "https://api.cobalt.liubquanti.click",
+      "https://api.qwkuns.me",
+      "https://nuko-c.meowing.de",
+      "https://subito-c.meowing.de",
+    ],
+    instagram: [
+      "https://api.cobalt.liubquanti.click",
+      "https://api.qwkuns.me",
+      "https://nuko-c.meowing.de",
+      "https://api-cobalt.eversiege.network",
+      "https://subito-c.meowing.de",
+      "https://lime.clxxped.lol",
+    ],
+    tiktok: [
+      "https://api.cobalt.liubquanti.click",
+      "https://api.qwkuns.me",
+      "https://nuko-c.meowing.de",
+      "https://api-cobalt.eversiege.network",
+      "https://subito-c.meowing.de",
+    ],
+    twitter: [
+      "https://api.cobalt.liubquanti.click",
+      "https://api.qwkuns.me",
+      "https://nuko-c.meowing.de",
+      "https://api-cobalt.eversiege.network",
+      "https://subito-c.meowing.de",
+    ],
+  };
+
+  return fallbacks[platform] || [
+    "https://api.cobalt.tools",
+    "https://co.wuk.sh",
+    "https://cobalt.kwi.cat",
+    "https://cobalt.q1.is",
+  ];
+}
 
 interface CobaltResponse {
   status: "tunnel" | "redirect" | "picker" | "error";
@@ -233,21 +296,23 @@ async function callCobaltInstance(instanceUrl: string, url: string, downloadMode
   }
 }
 
-async function callCobalt(url: string, downloadMode: "auto" | "audio"): Promise<CobaltResponse> {
+async function callCobalt(url: string, downloadMode: "auto" | "audio", platform: string): Promise<CobaltResponse> {
   // If the user configured a private custom self-hosted instance, use it exclusively
   if (process.env.COBALT_API_URL && process.env.COBALT_API_URL !== "https://api.cobalt.tools") {
     return callCobaltInstance(process.env.COBALT_API_URL, url, downloadMode);
   }
 
-  // Query all public instances in parallel, returning the first one that successfully resolves
-  const promises = COBALT_INSTANCES.map((instance) =>
+  const instances = await getWorkingCobaltInstances(platform);
+
+  // Query all working instances in parallel, returning the first one that successfully resolves
+  const promises = instances.slice(0, 8).map((instance) =>
     callCobaltInstance(instance, url, downloadMode)
   );
 
   try {
     return await Promise.any(promises);
   } catch (err) {
-    console.error("All Cobalt instances failed in parallel:", err);
+    console.error(`All Cobalt instances failed in parallel for ${platform}:`, err);
 
     // If it's an AggregateError, look for a specific invalid URL / client-input error
     if (err && typeof err === "object" && "errors" in err) {
@@ -363,33 +428,20 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     };
   }
 
-  // --- SPECIAL YOUTUBE EXTRACTOR BYPASS ---
-  if (platform === "youtube") {
-    const videoId = extractYoutubeId(url);
-    if (videoId) {
-      try {
-        const instances = await getHealthyInvidiousInstances();
-        // Query top 8 healthy instances in parallel to guarantee fast response under Vercel 10s timeout
-        const promises = instances.slice(0, 8).map((instance) =>
-          fetchFromInvidious(instance, videoId, url)
-        );
-        const result = await Promise.any(promises);
-        return {
-          success: true,
-          data: result,
-        };
-      } catch (e) {
-        console.warn("All parallel Invidious instances failed for YouTube bypass. Proceeding to Cobalt fallback.", e);
-      }
-    }
-  }
-
-  // --- GENERAL PLATFORM EXTRACTOR (COBALT FALLBACK) ---
+  // --- GENERAL PLATFORM EXTRACTOR ---
   try {
     const formats: MediaFormat[] = [];
     let title = `${platform.charAt(0).toUpperCase() + platform.slice(1)} Media`;
     let thumbnail = `https://placehold.co/1280x720/1a1a2e/3b82f6?text=${encodeURIComponent(platform.charAt(0).toUpperCase() + platform.slice(1))}`;
     let author = platformAuthors[platform] || "Creator";
+
+    // Set YouTube thumbnail proactively
+    if (platform === "youtube") {
+      const videoId = extractYoutubeId(url);
+      if (videoId) {
+        thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    }
 
     // Attempt tokenless real metadata extraction (Instagram, TikTok, Twitter/X)
     if (["instagram", "tiktok", "twitter"].includes(platform)) {
@@ -403,7 +455,7 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
 
     if (platform === "soundcloud") {
       // SoundCloud is audio only
-      const audioResult = await callCobalt(url, "audio");
+      const audioResult = await callCobalt(url, "audio", platform);
       if (audioResult.status === "tunnel" || audioResult.status === "redirect") {
         formats.push({
           quality: "High Quality",
@@ -418,8 +470,8 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     } else {
       // Other platforms: fetch video and audio in parallel
       const [videoResult, audioResult] = await Promise.allSettled([
-        callCobalt(url, "auto"),
-        callCobalt(url, "audio"),
+        callCobalt(url, "auto", platform),
+        callCobalt(url, "audio", platform),
       ]);
 
       let hasMedia = false;
@@ -436,7 +488,7 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
             url: val.url,
             filename: val.filename || "video.mp4",
           });
-          if (val.filename && (!title || title.startsWith("Instagram") || title.startsWith("Tiktok") || title.startsWith("Twitter"))) {
+          if (val.filename && (!title || title.startsWith("Instagram") || title.startsWith("Tiktok") || title.startsWith("Twitter") || title.startsWith("Youtube") || title.startsWith("YouTube"))) {
             title = val.filename;
           }
           hasMedia = true;
@@ -502,6 +554,28 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     };
   } catch (error) {
     console.error("Extraction error:", error);
+
+    // --- YOUTUBE INVIDIOUS FALLBACK ---
+    if (platform === "youtube") {
+      const videoId = extractYoutubeId(url);
+      if (videoId) {
+        try {
+          console.log("Cobalt failed for YouTube, attempting Invidious fallback...");
+          const instances = await getHealthyInvidiousInstances();
+          // Query top 8 healthy instances in parallel to guarantee fast response under Vercel 10s timeout
+          const promises = instances.slice(0, 8).map((instance) =>
+            fetchFromInvidious(instance, videoId, url)
+          );
+          const result = await Promise.any(promises);
+          return {
+            success: true,
+            data: result,
+          };
+        } catch (invidiousError) {
+          console.error("Invidious fallback also failed for YouTube:", invidiousError);
+        }
+      }
+    }
     
     // Provide a helpful error warning about Turnstile/CF blocks on public instance
     const errorMessage = error instanceof Error ? error.message : "Failed to communicate with media extractor service.";
