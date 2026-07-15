@@ -511,6 +511,165 @@ export const platforms: Platform[] = [
       { question: "Is there any duration limit?", answer: "No, you can download tracks of any length, including long podcasts or DJ sets." }
     ]
   },
+  {
+    name: "Instagram Post",
+    slug: "instagram-post-downloader",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Download Instagram posts, photos, and carousel slides in high resolution.",
+    longDescription: "FastVideoS is a free online Instagram Post Downloader that lets you download any public IG post, single photo, video, or multi-slide carousel to your device in high-definition quality. No login required.",
+    features: ["Save single photos and videos", "Download multi-image carousels", "HD image quality preserved", "No sign-up or accounts needed", "Works on mobile, tablet, and PC", "Fast & secure processing"],
+    supportedFormats: ["JPG", "MP4"],
+    steps: [
+      { title: "Copy the Instagram post link", description: "Open the Instagram post you want to download, tap the menu button (three dots), and click 'Copy Link'." },
+      { title: "Paste the URL", description: "Return to FastVideoS and paste the copied link into the input field at the top." },
+      { title: "Download post media", description: "Click 'Extract Media', preview the post slides, and download the individual files to your device." }
+    ],
+    faqs: [
+      { question: "Can I download multiple photos from a carousel post?", answer: "Yes! When you paste a carousel link, FastVideoS detects all slides, allowing you to select and download each image or video individually." },
+      { question: "Do I need to log in with my Instagram credentials?", answer: "No. FastVideoS is completely stateless and anonymous; we never ask for your username or password." },
+      { question: "Does it work for private posts?", answer: "No. For compliance and privacy, this tool only extracts media from publicly accessible Instagram posts." }
+    ]
+  },
+  {
+    name: "Instagram Photo",
+    slug: "instagram-photo-downloader",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Save high-quality photos and images from Instagram posts online.",
+    longDescription: "Download Instagram photos, profile images, and carousel pictures in their original full size and resolution with FastVideoS. Safe, quick, and free.",
+    features: ["Save original high-res photos", "Download carousel image slides", "No signup or account registration", "Instant download link generation", "Works on all modern web browsers", "Safe, anonymous extraction"],
+    supportedFormats: ["JPG", "PNG"],
+    steps: [
+      { title: "Copy the photo link", description: "Find the Instagram post containing the photo, tap the share icon, and select 'Copy Link'." },
+      { title: "Paste URL in FastVideoS", description: "Paste the copied photo URL into our input box above." },
+      { title: "Save the image", description: "Click 'Extract Media' to load the full-res photo preview, then click the download button to save." }
+    ],
+    faqs: [
+      { question: "What is the resolution of downloaded photos?", answer: "FastVideoS downloads photos in the highest resolution served by Instagram, typically up to 1080x1080 pixels for square images." },
+      { question: "Can I save pictures on my iPhone or Android?", answer: "Yes! Our web utility works on iOS and Android devices directly inside Safari, Chrome, or any other browser." },
+      { question: "Is there any limit to the number of photo downloads?", answer: "No. You can download as many Instagram photos as you want, completely free of charge." }
+    ]
+  },
+  {
+    name: "Instagram Video",
+    slug: "instagram-video-downloader",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Download Instagram feed videos and video posts in MP4 format.",
+    longDescription: "Save public Instagram videos directly to your device with FastVideoS. Extract and download IG feed videos in MP4 format in full HD quality without any watermarks or signups.",
+    features: ["Download feed videos in HD MP4", "No watermarks or quality loss", "Works on mobile, desktop, and tablet", "Quick direct download link generation", "Anonymous and secure", "No Instagram login required"],
+    supportedFormats: ["MP4"],
+    steps: [
+      { title: "Copy video link", description: "Locate the Instagram video post, tap the three dots or share menu, and select 'Copy Link'." },
+      { title: "Paste URL", description: "Paste the copied video link into the download form on FastVideoS." },
+      { title: "Download video", description: "Click 'Extract Media' to display the video player preview, then click download to save the MP4." }
+    ],
+    faqs: [
+      { question: "Can I convert Instagram videos to MP3?", answer: "Yes. After extracting the video, FastVideoS will display the audio-only option if available, allowing you to download the audio track as an MP3." },
+      { question: "What video formats are supported?", answer: "We extract and serve the videos in MP4 format, ensuring universal compatibility across all media players." },
+      { question: "Are video downloads anonymous?", answer: "Absolutely. FastVideoS does not share your IP address or activities with Instagram; downloads are fully private." }
+    ]
+  },
+  {
+    name: "Instagram Profile Picture",
+    slug: "instagram-profile-picture-downloader",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Download Instagram profile pictures (DP) in full size and high resolution.",
+    longDescription: "Save full-size profile pictures from any Instagram account. FastVideoS lets you search for any Instagram user to view and download their profile picture in full HD resolution. Works for both public and private profiles.",
+    features: ["Download full-size profile photos", "High-definition quality output", "Works on public and private accounts", "Simple username or link lookup", "No login required", "Totally free and anonymous"],
+    supportedFormats: ["JPG", "PNG"],
+    steps: [
+      { title: "Copy Profile URL or username", description: "Copy the profile page link of the user or note their exact Instagram username." },
+      { title: "Paste Profile details", description: "Paste the profile URL or username into the downloader box on FastVideoS." },
+      { title: "Save the profile photo", description: "Click 'Extract Media', view the full-size DP, and download it directly to your device." }
+    ],
+    faqs: [
+      { question: "Can I save DPs of private profiles?", answer: "Yes. Since Instagram profile pictures are publicly visible by default, our tool can extract and download full-size DPs even for private accounts." },
+      { question: "Is it anonymous to download a profile picture?", answer: "Yes. The user will never be notified that you viewed or downloaded their profile picture." },
+      { question: "Do I need to sign up to use this?", answer: "No. No registrations or user accounts are required." }
+    ]
+  },
+  {
+    name: "Instagram Profile",
+    slug: "instagram-profile-downloader",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Download media, posts, and details from public Instagram profiles.",
+    longDescription: "Easily download posts, reels, and stories from public Instagram profiles. Enter the profile link to view and save public media streams to your device instantly.",
+    features: ["Browse and download profile posts", "View reels and feed videos", "No login or password needed", "Download files in original resolution", "Quick layout extraction", "Completely free online tool"],
+    supportedFormats: ["MP4", "JPG"],
+    steps: [
+      { title: "Copy the Profile URL", description: "Navigate to the public Instagram profile in your browser and copy its URL." },
+      { title: "Paste the URL", description: "Paste the profile link into the extraction input field at the top." },
+      { title: "Select and download posts", description: "Click 'Extract Media' to preview recent posts and download the media items you want." }
+    ],
+    faqs: [
+      { question: "Can I download private profiles?", answer: "No. Out of respect for user privacy and platform compliance, we only extract media from public profiles." },
+      { question: "How many posts can I download at once?", answer: "You can download posts individually from the profile feed extraction. There is no daily download limit." }
+    ]
+  },
+  {
+    name: "YouTube Shorts",
+    slug: "youtube-shorts-downloader",
+    icon: "youtube",
+    color: "#FF0000",
+    description: "Download YouTube Shorts videos in high quality MP4 format.",
+    longDescription: "FastVideoS YouTube Shorts Downloader lets you download vertical YouTube Shorts videos in high definition. Save Shorts as MP4 with audio directly to your phone or computer.",
+    features: ["Download Shorts in HD quality", "Save as compatible MP4 format", "Extract audio tracks as MP3", "No registration required", "Fast download speeds", "Works on mobile and desktop"],
+    supportedFormats: ["MP4", "MP3"],
+    steps: [
+      { title: "Copy the Shorts link", description: "Open the YouTube Short, click the 'Share' button, and copy the video URL." },
+      { title: "Paste into FastVideoS", description: "Paste the Shorts link into the input field above. The platform is detected automatically." },
+      { title: "Download", description: "Select the desired video quality and click download to save the MP4 file." }
+    ],
+    faqs: [
+      { question: "Can I download Shorts in Full HD?", answer: "Yes, we download the highest resolution available on YouTube's servers, which is typically 1080p for Shorts." },
+      { question: "Can I extract audio from YouTube Shorts?", answer: "Yes, you can extract the audio track and download it as an MP3 file." },
+      { question: "Do you charge anything for Shorts downloads?", answer: "No. The service is 100% free and unlimited." }
+    ]
+  },
+  {
+    name: "YouTube Audio",
+    slug: "youtube-audio-downloader",
+    icon: "youtube",
+    color: "#FF0000",
+    description: "Extract and download high-quality audio tracks from YouTube videos.",
+    longDescription: "Extract high-fidelity audio streams from YouTube videos online. Save soundtracks, music, lectures, and podcasts as MP3 or M4A files for offline listening.",
+    features: ["High-fidelity audio extraction", "Convert YouTube to MP3/M4A", "Fast extraction speeds", "Works with long videos", "No account required", "Mobile-optimized interface"],
+    supportedFormats: ["MP3", "M4A"],
+    steps: [
+      { title: "Copy video link", description: "Find the YouTube video containing the audio you want and copy its URL." },
+      { title: "Paste into the downloader", description: "Return to FastVideoS and paste the YouTube link into the input field." },
+      { title: "Save audio track", description: "Select the audio quality (e.g. 128kbps or 320kbps) and download the MP3 or M4A file." }
+    ],
+    faqs: [
+      { question: "What audio formats are supported?", answer: "We support extracting audio in MP3 and M4A formats for broad device compatibility." },
+      { question: "Can I download audio from long videos?", answer: "Yes, you can extract audio from videos of any length, including 1-hour or longer lectures." },
+      { question: "Is the audio quality high?", answer: "Yes, we extract the highest bitrate audio stream available from the source video." }
+    ]
+  },
+  {
+    name: "YouTube to MP3",
+    slug: "youtube-to-mp3-downloader",
+    icon: "youtube",
+    color: "#FF0000",
+    description: "Convert YouTube videos to high-quality MP3 audio files.",
+    longDescription: "FastVideoS is a free online YouTube to MP3 converter. Convert any YouTube video to an offline MP3 audio track in high quality (up to 320kbps) instantly.",
+    features: ["High-bitrate MP3 conversion", "Fast cloud-based extraction", "No registrations or plugins", "Works on iOS, Android, and PC", "Supports videos of any length", "100% safe and secure"],
+    supportedFormats: ["MP3", "M4A"],
+    steps: [
+      { title: "Copy the YouTube link", description: "Find the video on YouTube and copy its URL from the address bar or share sheet." },
+      { title: "Paste and extract", description: "Paste the YouTube URL in the downloader input above to retrieve format options." },
+      { title: "Download MP3", description: "Select your desired MP3 audio quality and click download to convert and save." }
+    ],
+    faqs: [
+      { question: "What bitrates are supported?", answer: "We extract the best available audio streams, offering download options for standard 128kbps and premium 320kbps bitrates depending on the source." },
+      { question: "Can I use this on my iPhone?", answer: "Yes, our web converter works directly in Safari on iOS, allowing you to save audio files straight to your device." },
+      { question: "Are there duration limits for MP3 conversion?", answer: "No, you can convert videos of any length, including playlists (one-by-one) and long mix tapes." }
+    ]
+  },
 ];
 
 export function getPlatformBySlug(slug: string): Platform | undefined {
