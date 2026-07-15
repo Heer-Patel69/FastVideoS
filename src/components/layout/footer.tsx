@@ -2,28 +2,35 @@ import Link from "next/link";
 import { Zap } from "lucide-react";
 
 const footerLinks = {
-  product: [
-    { title: "Home", href: "/" },
-    { title: "Platforms", href: "/platforms" },
-    { title: "Blog", href: "/blog" },
-    { title: "FAQ", href: "/faq" },
-  ],
-  tools: [
+  youtube: [
     { title: "YouTube Downloader", href: "/youtube-video-downloader" },
-    { title: "Twitter Downloader", href: "/twitter-video-downloader" },
-    { title: "Instagram Downloader", href: "/instagram-reels-downloader" },
+    { title: "YouTube Shorts", href: "/youtube-shorts-downloader" },
+    { title: "YouTube Audio", href: "/youtube-audio-downloader" },
+    { title: "YouTube to MP3", href: "/youtube-to-mp3-downloader" },
+  ],
+  instagram: [
+    { title: "Instagram Reels", href: "/instagram-reels-downloader" },
+    { title: "Instagram Story", href: "/instagram-story-saver" },
+    { title: "Instagram Highlights", href: "/instagram-highlights-downloader" },
+    { title: "Instagram Profile Picture", href: "/instagram-profile-picture-downloader" },
+    { title: "Instagram Profile", href: "/instagram-profile-downloader" },
+  ],
+  other: [
     { title: "TikTok Downloader", href: "/tiktok-video-downloader" },
-  ],
-  resources: [
-    { title: "About", href: "/about" },
-    { title: "Contact", href: "/contact" },
-    {
-      title: "SoundCloud Downloader",
-      href: "/soundcloud-downloader",
-    },
+    { title: "Twitter/X Downloader", href: "/twitter-video-downloader" },
     { title: "Reddit Downloader", href: "/reddit-video-downloader" },
+    { title: "SoundCloud Downloader", href: "/soundcloud-downloader" },
+    { title: "SoundCloud to MP3", href: "/soundcloud-mp3-downloader" },
+    { title: "Facebook Downloader", href: "/facebook-video-downloader" },
+    { title: "Vimeo Downloader", href: "/vimeo-video-downloader" },
   ],
-  legal: [
+  company: [
+    { title: "Home", href: "/" },
+    { title: "All Platforms", href: "/platforms" },
+    { title: "Blog Guides", href: "/blog" },
+    { title: "FAQ Help", href: "/faq" },
+    { title: "About Us", href: "/about" },
+    { title: "Contact Us", href: "/contact" },
     { title: "Privacy Policy", href: "/privacy" },
     { title: "Terms of Service", href: "/terms" },
   ],
@@ -36,13 +43,13 @@ export function Footer() {
     <footer className="border-t border-border bg-muted/30" role="contentinfo">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
-          {/* Product */}
+          {/* YouTube Downloaders */}
           <div>
             <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Product
+              YouTube Tools
             </h3>
             <ul className="space-y-3">
-              {footerLinks.product.map((link) => (
+              {footerLinks.youtube.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -55,13 +62,13 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Tools */}
+          {/* Instagram Downloaders */}
           <div>
             <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Tools
+              Instagram Tools
             </h3>
             <ul className="space-y-3">
-              {footerLinks.tools.map((link) => (
+              {footerLinks.instagram.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -74,13 +81,13 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Other Tools */}
           <div>
             <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Resources
+              Other Platforms
             </h3>
             <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
+              {footerLinks.other.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -93,13 +100,13 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Company & Legal */}
           <div>
             <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Legal
+              Company
             </h3>
             <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
+              {footerLinks.company.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
