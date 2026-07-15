@@ -2,8 +2,31 @@
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const mediaUrl = searchParams.get("url");
     const filename = searchParams.get("filename") || "download";
+
+    // Manually extract the full media URL from the raw request URL query string.
+    // This prevents the browser or Next.js from splitting the nested query parameters
+    // (such as &sig, &exp, &iv, etc. required by the downloader backend) into separate parameters.
+    const requestUrl = request.url;
+    let mediaUrl = "";
+    const urlParamIndex = requestUrl.indexOf("?url=");
+    const urlParamIndexAlt = requestUrl.indexOf("&url=");
+    const startIndex = urlParamIndex !== -1 ? urlParamIndex + 5 : (urlParamIndexAlt !== -1 ? urlParamIndexAlt + 5 : -1);
+
+    if (startIndex !== -1) {
+      const remainingString = requestUrl.substring(startIndex);
+      const filenameIndex = remainingString.indexOf("&filename=");
+      if (filenameIndex !== -1) {
+        mediaUrl = remainingString.substring(0, filenameIndex);
+      } else {
+        mediaUrl = remainingString;
+      }
+      mediaUrl = decodeURIComponent(mediaUrl);
+    }
+
+    if (!mediaUrl) {
+      mediaUrl = searchParams.get("url") || "";
+    }
 
     if (!mediaUrl) {
       return new Response("Missing url parameter", { status: 400 });
@@ -19,10 +42,14 @@ export async function GET(request: Request) {
       return new Response("Invalid url parameter", { status: 400 });
     }
 
-    const response = await fetch(mediaUrl);
+    const response = await fetch(mediaUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      }
+    });
 
     if (!response.ok) {
-      return new Response("Failed to fetch media file", { status: response.status });
+      return new Response(`Failed to fetch media file: ${response.statusText}`, { status: response.status });
     }
 
     const contentType = response.headers.get("content-type") || "application/octet-stream";
