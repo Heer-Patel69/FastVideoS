@@ -519,6 +519,15 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
           // Handle carousel posts (like TikTok/Instagram image carousels)
           const hasVideoInPicker = val.picker.some((item) => item.type === "video");
           
+          // For Instagram, if it's a Reel, or if it's a single video post (exactly 1 video and 1 photo cover),
+          // we only want to show the video to avoid cluttering the UI with the static cover image.
+          // For Carousel posts (multiple photos/videos), we want to show all items.
+          const isInstagramReelUrl = platform === "instagram" && (url.includes("/reel/") || url.includes("/reels/") || url.includes("/tv/"));
+          const isSingleVideoPost = platform === "instagram" && (
+            isInstagramReelUrl || 
+            (val.picker.length <= 2 && hasVideoInPicker)
+          );
+
           // Find first photo to use as thumbnail preview
           const firstPhoto = val.picker.find((item) => item.type === "photo");
           if (firstPhoto && (!thumbnail || thumbnail.includes("placehold.co"))) {
@@ -526,14 +535,17 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
           }
 
           val.picker.forEach((item: { url: string; type: string; filename?: string }, idx: number) => {
-            // If the post has a video, don't show the static cover photos as download options.
-            // Only show the video files for download.
-            if (hasVideoInPicker && item.type === "photo") {
+            // Skip the cover photo if this is verified to be a single video post
+            if (isSingleVideoPost && item.type === "photo") {
               return;
             }
 
             formats.push({
-              quality: hasVideoInPicker ? "HD Video" : `Image ${idx + 1}`,
+              quality: isSingleVideoPost
+                ? "HD Video"
+                : item.type === "photo"
+                  ? `Image ${idx + 1}`
+                  : `Video ${idx + 1}`,
               format: item.type === "photo" ? "JPG" : "MP4",
               size: "Download",
               hasAudio: item.type !== "photo",
@@ -622,6 +634,45 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
           };
         } catch (invidiousError) {
           console.error("Invidious fallback also failed for YouTube:", invidiousError);
+        }
+      }
+    }
+
+    // --- INSTAGRAM OEMBED FALLBACK ---
+    if (platform === "instagram") {
+      const shortcodeMatch = url.match(/(?:\/p\/|\/reel\/|\/reels\/|\/tv\/)([A-Za-z0-9_-]+)/);
+      const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
+      if (shortcode) {
+        try {
+          console.log("Cobalt failed for Instagram, attempting oEmbed media fallback...");
+          const rawThumbnail = `https://www.instagram.com/p/${shortcode}/media/?size=l`;
+          const proxiedThumbnail = `/api/download?url=${encodeURIComponent(rawThumbnail)}&filename=instagram-post.jpg`;
+          
+          const fallbackInfo: MediaInfo = {
+            url,
+            platform: "instagram",
+            title: `Instagram Post (${shortcode})`,
+            thumbnail: proxiedThumbnail,
+            duration: "Image",
+            author: "Instagram Creator",
+            formats: [
+              {
+                quality: "Image Download",
+                format: "JPG",
+                size: "Download",
+                hasAudio: false,
+                url: rawThumbnail,
+                filename: `instagram-${shortcode}.jpg`,
+              }
+            ]
+          };
+          
+          return {
+            success: true,
+            data: fallbackInfo,
+          };
+        } catch (instaFallbackError) {
+          console.error("Instagram oEmbed fallback also failed:", instaFallbackError);
         }
       }
     }
