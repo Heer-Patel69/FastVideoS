@@ -547,13 +547,29 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
             : "No downloadable media formats could be extracted.";
         throw new Error(errorMsg);
       }
+
+      // If this is an Instagram Reel/Video download request, we must have at least one video format.
+      // If it only returned images, it means the video stream itself could not be extracted (typically due to login walls).
+      const isInstagramReelUrl = platform === "instagram" && (url.includes("/reel/") || url.includes("/reels/") || url.includes("/tv/"));
+      if (isInstagramReelUrl) {
+        const hasVideoFormat = formats.some((f) => f.format.toUpperCase() === "MP4");
+        if (!hasVideoFormat) {
+          throw new Error("Instagram Reel video stream could not be extracted. This is usually due to Instagram rate-limiting public server requests. Please try again in a few minutes or use another link.");
+        }
+      }
+    }
+
+    // Proxy Instagram thumbnail if it's a direct external link to prevent PC hotlinking 403 blocks
+    let finalThumbnail = thumbnail;
+    if (platform === "instagram" && thumbnail && thumbnail.startsWith("http") && !thumbnail.includes("/api/download")) {
+      finalThumbnail = `/api/download?url=${encodeURIComponent(thumbnail)}&filename=instagram-preview.jpg`;
     }
 
     const mediaInfo: MediaInfo = {
       url,
       platform,
       title,
-      thumbnail,
+      thumbnail: finalThumbnail,
       duration: platform === "soundcloud" ? "Audio" : "Video",
       author,
       formats,
