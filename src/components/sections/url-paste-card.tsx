@@ -180,13 +180,32 @@ export function UrlPasteCard() {
             <div className="mt-6 space-y-4 border-t border-border pt-6">
               {/* Media info */}
               <div className="flex gap-4">
-                <div className="h-20 w-32 shrink-0 overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-40">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={data.thumbnail}
-                    alt={data.title}
-                    className="h-full w-full object-cover"
-                  />
+                <div className="relative flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-40 select-none">
+                  {data.thumbnail && !data.thumbnail.includes("placehold.co") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={data.thumbnail}
+                      alt={data.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={cn(
+                        "absolute inset-0 flex items-center justify-center text-[10px] font-bold tracking-wider text-white uppercase",
+                        data.platform === "instagram" && "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]",
+                        data.platform === "youtube" && "bg-gradient-to-tr from-[#ff0000] to-[#b30000]",
+                        data.platform === "twitter" && "bg-gradient-to-tr from-[#0f1419] to-[#272c30]",
+                        data.platform === "tiktok" && "bg-gradient-to-tr from-[#010101] via-[#10b981] to-[#ec4899]",
+                        data.platform === "facebook" && "bg-gradient-to-tr from-[#1877f2] to-[#0d52b8]",
+                        data.platform === "soundcloud" && "bg-gradient-to-tr from-[#ff5500] to-[#ff2200]",
+                        data.platform === "reddit" && "bg-gradient-to-tr from-[#ff4500] to-[#b33000]"
+                      )}
+                    >
+                      <div className="rounded bg-black/25 px-2 py-0.5 backdrop-blur-sm">
+                        {platformLabels[data.platform] || data.platform}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-semibold text-foreground">

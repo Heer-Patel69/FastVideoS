@@ -81,42 +81,86 @@ async function getHealthyInvidiousInstances(): Promise<string[]> {
   ];
 }
 
-async function callCobalt(url: string, downloadMode: "auto" | "audio") {
+const COBALT_INSTANCES = [
+  "https://api.cobalt.tools",
+  "https://co.wuk.sh",
+  "https://cobalt.kwi.cat",
+  "https://cobalt.q1.is",
+  "https://cobalt-api.v0.pw",
+];
+
+async function callCobaltInstance(instanceUrl: string, url: string, downloadMode: "auto" | "audio") {
   const headers: Record<string, string> = {
     "Accept": "application/json",
     "Content-Type": "application/json",
   };
 
-  if (COBALT_API_KEY) {
+  if (COBALT_API_KEY && instanceUrl === COBALT_API_URL) {
     headers["Authorization"] = `Bearer ${COBALT_API_KEY}`;
   }
 
-  const response = await fetch(COBALT_API_URL, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      url,
-      downloadMode,
-      videoQuality: "1080",
-      filenameStyle: "classic",
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout per instance
 
-  const responseText = await response.text();
-  let responseData;
   try {
-    responseData = JSON.parse(responseText);
-  } catch {
-    throw new Error(
-      `Invalid response from download service (HTTP ${response.status})`
-    );
+    const response = await fetch(instanceUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        url,
+        downloadMode,
+        videoQuality: "1080",
+        filenameStyle: "classic",
+      }),
+      signal: controller.signal,
+    });
+
+    const responseText = await response.text();
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        `Invalid response from download service (HTTP ${response.status})`
+      );
+    }
+
+    if (!response.ok || responseData.status === "error") {
+      throw new Error(responseData.text || responseData.error?.code || `Error HTTP ${response.status}`);
+    }
+
+    return responseData;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function callCobalt(url: string, downloadMode: "auto" | "audio") {
+  // If the user configured a private custom self-hosted instance, use it exclusively
+  if (process.env.COBALT_API_URL && process.env.COBALT_API_URL !== "https://api.cobalt.tools") {
+    return callCobaltInstance(process.env.COBALT_API_URL, url, downloadMode);
   }
 
-  if (!response.ok || responseData.status === "error") {
-    throw new Error(responseData.text || responseData.error?.code || `Error HTTP ${response.status}`);
+  // Rotate through the public cluster
+  let lastError = new Error("Failed to communicate with download service.");
+  for (const instance of COBALT_INSTANCES) {
+    try {
+      return await callCobaltInstance(instance, url, downloadMode);
+    } catch (e) {
+      console.warn(`Cobalt instance ${instance} failed:`, e);
+      lastError = e instanceof Error ? e : new Error(String(e));
+      
+      const errorMsg = lastError.message;
+      if (
+        errorMsg.includes("error.api.invalid_url") || 
+        errorMsg.includes("error.api.url_invalid") ||
+        errorMsg.includes("400")
+      ) {
+        throw lastError;
+      }
+    }
   }
-
-  return responseData;
+  throw lastError;
 }
 
 // Tokenless metadata fetcher for Instagram, TikTok, and Twitter/X
@@ -131,53 +175,13 @@ async function fetchMediaMetadata(
     if (platform === "instagram") {
       const shortcodeMatch = url.match(/(?:\/p\/|\/reel\/|\/reels\/|\/tv\/)([A-Za-z0-9_-]+)/);
       const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
-      if (!shortcode) return null;
-
-      let title = "";
-      let author = "";
-      let thumbnail = "";
-
-      // 1. Fetch tokenless oEmbed API for Title & Creator Username
-      try {
-        const oembedRes = await fetch(
-          `https://graph.facebook.com/v25.0/instagram_oembed?url=${encodeURIComponent(url)}`,
-          { signal: controller.signal }
-        );
-        if (oembedRes.ok) {
-          const oembedData = await oembedRes.json();
-          title = oembedData.title || "";
-          author = oembedData.author_name ? `@${oembedData.author_name}` : "";
-        }
-      } catch (e) {
-        console.warn("Instagram oEmbed failed:", e);
+      if (shortcode) {
+        return {
+          title: `Instagram Post (${shortcode})`,
+          author: "Instagram Creator",
+        };
       }
-
-      // 2. Fetch ddinstagram to extract the high-quality CDN image URL
-      try {
-        const ddRes = await fetch(`https://www.ddinstagram.com/reel/${shortcode}/`, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          },
-          signal: controller.signal,
-        });
-        if (ddRes.ok) {
-          const html = await ddRes.text();
-          const ogImageMatch =
-            html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
-            html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
-          if (ogImageMatch) {
-            thumbnail = ogImageMatch[1];
-          }
-        }
-      } catch (e) {
-        console.warn("Instagram ddinstagram thumbnail scraping failed:", e);
-      }
-
-      return {
-        title: title || undefined,
-        author: author || undefined,
-        thumbnail: thumbnail || undefined,
-      };
+      return null;
     }
 
     if (platform === "tiktok") {
