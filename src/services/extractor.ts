@@ -13,7 +13,17 @@ const COBALT_API_KEY = process.env.COBALT_API_KEY || "";
 function extractYoutubeId(url: string): string | null {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
-  return match && match[2].length === 11 ? match[2] : null;
+  if (match && match[2].length === 11) {
+    return match[2];
+  }
+
+  // Fallback for YouTube Shorts: youtube.com/shorts/<video_id>
+  const shortsMatch = url.match(/\/shorts\/([A-Za-z0-9_-]{11})/);
+  if (shortsMatch) {
+    return shortsMatch[1];
+  }
+
+  return null;
 }
 
 function extractTweetId(url: string): string | null {
@@ -176,8 +186,10 @@ async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
       const json = await res.json();
       if (json && json.data && Array.isArray(json.data[platform])) {
         const activeInstances = json.data[platform].filter((url: string) => url && url.startsWith("http"));
-        if (activeInstances.length > 0) {
-          return activeInstances;
+        const verifiedOpen = ["https://cobaltapi.cjs.nz", "https://rue-cobalt.xenon.zone"];
+        const combined = Array.from(new Set([...verifiedOpen, ...activeInstances]));
+        if (combined.length > 0) {
+          return combined;
         }
       }
     }
@@ -190,6 +202,8 @@ async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
   // Fallback lists if the API is down or rate-limited
   const fallbacks: Record<string, string[]> = {
     youtube: [
+      "https://cobaltapi.cjs.nz",
+      "https://rue-cobalt.xenon.zone",
       "https://api.cobalt.liubquanti.click",
       "https://grapefruit.clxxped.lol",
       "https://api.qwkuns.me",
@@ -198,12 +212,16 @@ async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
       "https://subito-c.meowing.de",
     ],
     "youtube-shorts": [
+      "https://cobaltapi.cjs.nz",
+      "https://rue-cobalt.xenon.zone",
       "https://api.cobalt.liubquanti.click",
       "https://api.qwkuns.me",
       "https://nuko-c.meowing.de",
       "https://subito-c.meowing.de",
     ],
     instagram: [
+      "https://cobaltapi.cjs.nz",
+      "https://rue-cobalt.xenon.zone",
       "https://api.cobalt.liubquanti.click",
       "https://api.qwkuns.me",
       "https://nuko-c.meowing.de",
@@ -212,6 +230,8 @@ async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
       "https://lime.clxxped.lol",
     ],
     tiktok: [
+      "https://cobaltapi.cjs.nz",
+      "https://rue-cobalt.xenon.zone",
       "https://api.cobalt.liubquanti.click",
       "https://api.qwkuns.me",
       "https://nuko-c.meowing.de",
@@ -219,6 +239,8 @@ async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
       "https://subito-c.meowing.de",
     ],
     twitter: [
+      "https://cobaltapi.cjs.nz",
+      "https://rue-cobalt.xenon.zone",
       "https://api.cobalt.liubquanti.click",
       "https://api.qwkuns.me",
       "https://nuko-c.meowing.de",
