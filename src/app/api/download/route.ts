@@ -1,3 +1,4 @@
+export const runtime = "edge";
 
 export async function GET(request: Request) {
   try {
@@ -57,9 +58,13 @@ export async function GET(request: Request) {
 
     const headers = new Headers();
     headers.set("Content-Type", contentType);
+    
+    // Ensure filename is safe for standard ASCII Content-Disposition fallback
+    const safeFilename = filename.replace(/[/\\?%*:|"<>;]/g, "_").replace(/[^\x20-\x7E]/g, "?");
+    
     headers.set(
       "Content-Disposition",
-      `attachment; filename="${encodeURIComponent(filename)}"`
+      `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`
     );
     if (contentLength) {
       headers.set("Content-Length", contentLength);

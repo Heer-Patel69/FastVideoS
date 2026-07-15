@@ -228,6 +228,7 @@ export function UrlPasteCard() {
                         <a
                           key={index}
                           href={`/api/download?url=${encodeURIComponent(format.url || "")}&filename=${encodeURIComponent(format.filename || "download")}`}
+                          download={format.filename || "download"}
                           className={cn(
                             "flex w-full h-11 items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 active:scale-[0.98] text-sm",
                             index === 0
@@ -327,6 +328,7 @@ export function UrlPasteCard() {
                           </div>
                           <a
                             href={`/api/download?url=${encodeURIComponent(format.url || "")}&filename=${encodeURIComponent(format.filename || "download")}`}
+                            download={format.filename || "download"}
                             className="flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                           >
                             <Download className="h-3 w-3" />
