@@ -10,6 +10,27 @@ interface ExtractorResult {
 const COBALT_API_URL = process.env.COBALT_API_URL || "https://api.cobalt.tools";
 const COBALT_API_KEY = process.env.COBALT_API_KEY || "";
 
+const INVIDIOUS_INSTANCES = [
+  "yewtu.be",
+  "invidious.flokinet.to",
+  "inv.tux.im",
+  "vid.puffyan.us",
+  "invidious.io",
+];
+
+function extractYoutubeId(url: string): string | null {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+}
+
+function formatDuration(seconds: number): string {
+  if (!seconds) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
 async function callCobalt(url: string, downloadMode: "auto" | "audio") {
   const headers: Record<string, string> = {
     "Accept": "application/json",
@@ -69,6 +90,87 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     };
   }
 
+  // --- SPECIAL YOUTUBE EXTRACTOR BYPASS ---
+  if (platform === "youtube") {
+    const videoId = extractYoutubeId(url);
+    if (videoId) {
+      for (const instance of INVIDIOUS_INSTANCES) {
+        try {
+          // Attempt to call Invidious instance (with 5 seconds timeout)
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+          const response = await fetch(
+            `https://${instance}/api/v1/videos/${videoId}?local=true`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            const formats: MediaFormat[] = [];
+
+            // 1. Add formatStreams (progressive formats with both video + audio)
+            if (data.formatStreams && Array.isArray(data.formatStreams)) {
+              data.formatStreams.forEach((stream: { url: string; quality?: string; container?: string }) => {
+                let streamUrl = stream.url;
+                if (streamUrl && streamUrl.startsWith("/")) {
+                  streamUrl = `https://${instance}${streamUrl}`;
+                }
+                formats.push({
+                  quality: stream.quality || "360p",
+                  format: "MP4",
+                  size: "Download",
+                  hasAudio: true,
+                  url: streamUrl,
+                  filename: `${data.title || "video"}.mp4`,
+                });
+              });
+            }
+
+            // 2. Add adaptiveFormats (audio-only formats)
+            if (data.adaptiveFormats && Array.isArray(data.adaptiveFormats)) {
+              data.adaptiveFormats.forEach((stream: { url: string; type?: string; audioBitrate?: number }) => {
+                if (stream.type && stream.type.startsWith("audio/")) {
+                  let streamUrl = stream.url;
+                  if (streamUrl && streamUrl.startsWith("/")) {
+                    streamUrl = `https://${instance}${streamUrl}`;
+                  }
+                  formats.push({
+                    quality: `${stream.audioBitrate || 128}kbps`,
+                    format: "MP3",
+                    size: "Audio Track",
+                    hasAudio: true,
+                    url: streamUrl,
+                    filename: `${data.title || "audio"}.mp3`,
+                  });
+                }
+              });
+            }
+
+            if (formats.length > 0) {
+              return {
+                success: true,
+                data: {
+                  url,
+                  platform: "youtube",
+                  title: data.title || "YouTube Video",
+                  thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                  duration: formatDuration(data.lengthSeconds),
+                  author: data.author || "YouTube Creator",
+                  formats,
+                },
+              };
+            }
+          }
+        } catch (e) {
+          console.warn(`Invidious instance ${instance} failed:`, e);
+        }
+      }
+    }
+  }
+
+  // --- GENERAL PLATFORM EXTRACTOR (COBALT FALLBACK) ---
   try {
     const formats: MediaFormat[] = [];
     let title = `${platform.charAt(0).toUpperCase() + platform.slice(1)} Media`;
