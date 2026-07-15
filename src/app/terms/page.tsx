@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { generatePageMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
@@ -111,7 +112,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-foreground">10. Contact</h2>
           <p className="mt-3">
             For questions about these Terms, please visit our{" "}
-            <a href="/contact" className="text-primary hover:underline">contact page</a>.
+            <Link href="/contact" className="text-primary hover:underline">contact page</Link>.
           </p>
         </section>
       </div>

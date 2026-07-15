@@ -9,19 +9,19 @@ const footerLinks = {
     { title: "FAQ", href: "/faq" },
   ],
   tools: [
-    { title: "YouTube Downloader", href: "/tools/youtube-video-downloader" },
-    { title: "Twitter Downloader", href: "/tools/twitter-video-downloader" },
-    { title: "Instagram Downloader", href: "/tools/instagram-reels-downloader" },
-    { title: "TikTok Downloader", href: "/tools/tiktok-video-downloader" },
+    { title: "YouTube Downloader", href: "/youtube-video-downloader" },
+    { title: "Twitter Downloader", href: "/twitter-video-downloader" },
+    { title: "Instagram Downloader", href: "/instagram-reels-downloader" },
+    { title: "TikTok Downloader", href: "/tiktok-video-downloader" },
   ],
   resources: [
     { title: "About", href: "/about" },
     { title: "Contact", href: "/contact" },
     {
       title: "SoundCloud Downloader",
-      href: "/tools/soundcloud-downloader",
+      href: "/soundcloud-downloader",
     },
-    { title: "Reddit Downloader", href: "/tools/reddit-video-downloader" },
+    { title: "Reddit Downloader", href: "/reddit-video-downloader" },
   ],
   legal: [
     { title: "Privacy Policy", href: "/privacy" },

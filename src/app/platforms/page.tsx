@@ -16,7 +16,7 @@ export const metadata: Metadata = generatePageMetadata({
 export default function PlatformsPage() {
   const schema = itemListSchema(
     "Supported Platforms",
-    platforms.map((p) => ({ name: p.name, url: `/tools/${p.slug}` }))
+    platforms.map((p) => ({ name: p.name, url: `/${p.slug}` }))
   );
 
   return (
@@ -41,7 +41,7 @@ export default function PlatformsPage() {
           {platforms.map((platform) => (
             <Link
               key={platform.slug}
-              href={`/tools/${platform.slug}`}
+              href={`/${platform.slug}`}
               className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
             >
               <div className="flex items-center gap-3">

@@ -435,6 +435,82 @@ export const platforms: Platform[] = [
       },
     ],
   },
+  {
+    name: "Instagram Story",
+    slug: "instagram-story-saver",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Save Instagram Stories and highlights online. Keep IG videos and photos before they disappear.",
+    longDescription: "FastVideoS is a free online Instagram Story Saver that lets you download any public IG story or active highlight in HD quality. Save photos and videos directly to your device with ease. No login or signup required.",
+    features: ["Save IG stories in HD", "Download stories anonymously", "No login or password needed", "Works on mobile & desktop", "Extract photo & video stories", "100% secure processing"],
+    supportedFormats: ["MP4", "JPG"],
+    steps: [
+      { title: "Copy the Instagram story link", description: "Open the Instagram story, tap the share icon, and select 'Copy Link'." },
+      { title: "Paste URL in FastVideoS", description: "Paste the copied story link into the downloader field on FastVideoS." },
+      { title: "Download story media", description: "Click 'Extract Media' to view available story contents, then click download." }
+    ],
+    faqs: [
+      { question: "Is it anonymous to download stories?", answer: "Yes, downloading Instagram Stories using FastVideoS is completely anonymous. The account owner will not know you downloaded or viewed their story." },
+      { question: "Can I download stories from private accounts?", answer: "No, our story downloader only accesses public Instagram profiles for privacy and security compliance." }
+    ]
+  },
+  {
+    name: "Instagram Highlights",
+    slug: "instagram-highlights-downloader",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "Download Instagram Story Highlights in high quality. Archive your favorite highlight reels.",
+    longDescription: "Save Instagram Highlights online for free. Download high-quality video highlights and photos directly to your device instantly. No sign-up required.",
+    features: ["Download Highlights in HD", "No Instagram login or credentials required", "Works with all highlight posts", "Extract high-quality MP4 files", "Fast processing speeds", "Completely free to use"],
+    supportedFormats: ["MP4", "JPG"],
+    steps: [
+      { title: "Copy Highlight link", description: "Navigate to the highlight on Instagram and copy its link from the menu." },
+      { title: "Paste URL", description: "Paste the highlight URL into the input field at the top of this page." },
+      { title: "Download", description: "Click 'Extract Media', view the available highlight items, and download." }
+    ],
+    faqs: [
+      { question: "Can I download active Highlights?", answer: "Yes, you can download any active Instagram story highlights as long as they are publicly accessible." },
+      { question: "Does this require my Instagram password?", answer: "No, FastVideoS does not require any passwords or account access to extract public media." }
+    ]
+  },
+  {
+    name: "Instagram Profile Picture",
+    slug: "instagram-dp-viewer",
+    icon: "instagram",
+    color: "#E4405F",
+    description: "View and download Instagram profile pictures in full size and high resolution.",
+    longDescription: "FastVideoS Instagram Profile Picture Downloader and Viewer lets you view and save any Instagram user's profile photo in its original full-size HD resolution. Works on any account — public or private.",
+    features: ["View profile pictures in full size", "Download high-resolution HD profile photos", "Works on both public & private profiles", "Simple search by profile URL", "No account required", "Fast and free"],
+    supportedFormats: ["JPG", "PNG"],
+    steps: [
+      { title: "Copy Profile URL", description: "Go to the Instagram profile and copy the profile page URL or username." },
+      { title: "Paste Profile URL", description: "Paste the copied URL or username into the download box on FastVideoS." },
+      { title: "View and Download HD DP", description: "Click 'Extract Media' to load the full-size profile picture, then click download." }
+    ],
+    faqs: [
+      { question: "Can I view profile pictures of private accounts?", answer: "Yes. Profile pictures are always public on Instagram, so you can view and download them in high resolution even for private profiles." },
+      { question: "Is this tool free?", answer: "Yes, viewing and saving profile pictures is 100% free and unlimited." }
+    ]
+  },
+  {
+    name: "SoundCloud to MP3",
+    slug: "soundcloud-mp3-downloader",
+    icon: "soundcloud",
+    color: "#FF5500",
+    description: "Convert and download SoundCloud tracks as high-quality MP3 files.",
+    longDescription: "Extract and convert SoundCloud tracks to high-quality MP3 files (up to 320kbps) with FastVideoS. Our tool lets you easily save tracks and sets for offline playback on any device.",
+    features: ["Convert SoundCloud to MP3 (128kbps/320kbps)", "Preserves track metadata", "Extract tracks fast", "No login required", "Works on mobile & desktop", "Completely free"],
+    supportedFormats: ["MP3", "M4A"],
+    steps: [
+      { title: "Copy SoundCloud Link", description: "Find the track or podcast on SoundCloud and copy its URL." },
+      { title: "Paste Link", description: "Paste the SoundCloud link into the download box above." },
+      { title: "Convert to MP3", description: "Select MP3 as the output format and click download to save the track." }
+    ],
+    faqs: [
+      { question: "Can I download tracks offline?", answer: "Yes, converting SoundCloud tracks to MP3 allows you to listen offline on any player." },
+      { question: "Is there any duration limit?", answer: "No, you can download tracks of any length, including long podcasts or DJ sets." }
+    ]
+  },
 ];
 
 export function getPlatformBySlug(slug: string): Platform | undefined {

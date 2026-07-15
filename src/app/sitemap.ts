@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const toolPages: MetadataRoute.Sitemap = getAllPlatformSlugs().map((slug) => ({
-    url: `${baseUrl}/tools/${slug}`,
+    url: `${baseUrl}/${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.9,

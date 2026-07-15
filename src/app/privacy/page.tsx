@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { generatePageMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
@@ -102,7 +103,7 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-semibold text-foreground">9. Contact Us</h2>
           <p className="mt-3">
             If you have questions about this Privacy Policy, please contact us through our{" "}
-            <a href="/contact" className="text-primary hover:underline">contact page</a>.
+            <Link href="/contact" className="text-primary hover:underline">contact page</Link>.
           </p>
         </section>
       </div>

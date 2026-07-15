@@ -36,7 +36,7 @@ export async function generateMetadata({
   return generatePageMetadata({
     title,
     description: platform.longDescription,
-    path: `/tools/${slug}`,
+    path: `/${slug}`,
   });
 }
 
@@ -81,7 +81,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
         <Breadcrumbs
           items={[
             { name: "Tools", href: "/platforms" },
-            { name: `${platform.name} Downloader`, href: `/tools/${slug}` },
+            { name: `${platform.name} Downloader`, href: `/${slug}` },
           ]}
         />
 
@@ -190,7 +190,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
             {otherPlatforms.map((p) => (
               <a
                 key={p.slug}
-                href={`/tools/${p.slug}`}
+                href={`/${p.slug}`}
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-md"
               >
                 <div

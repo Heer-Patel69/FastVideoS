@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { generatePageMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
@@ -73,7 +74,7 @@ export default function AboutPage() {
         <h2 className="pt-4 text-xl font-semibold text-foreground">Contact</h2>
         <p>
           Have feedback, a bug report, or a platform request? We&apos;d love to hear from you.
-          Visit our <a href="/contact" className="text-primary hover:underline">contact page</a> to
+          Visit our <Link href="/contact" className="text-primary hover:underline">contact page</Link> to
           get in touch.
         </p>
       </div>

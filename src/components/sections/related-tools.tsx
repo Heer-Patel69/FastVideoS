@@ -45,7 +45,7 @@ export function RelatedTools() {
               transition={{ duration: 0.4, delay: index * 0.05 }}
             >
               <Link
-                href={`/tools/${platform.slug}`}
+                href={`/${platform.slug}`}
                 className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5"
               >
                 <div className="flex items-center gap-3">

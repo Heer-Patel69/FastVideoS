@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -28,12 +29,12 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
           >
             Try Again
           </button>
-          <a
+          <Link
             href="/contact"
             className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             Contact Support
-          </a>
+          </Link>
         </div>
       </div>
     </div>

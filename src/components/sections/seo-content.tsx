@@ -37,35 +37,35 @@ export function SeoContent() {
           <h3>Supported Platforms and Formats</h3>
           <p>
             FastVideoS supports downloading from{" "}
-            <Link href="/tools/youtube-video-downloader" className="text-primary hover:underline">
+            <Link href="/youtube-video-downloader" className="text-primary hover:underline">
               YouTube
             </Link>
             ,{" "}
-            <Link href="/tools/twitter-video-downloader" className="text-primary hover:underline">
+            <Link href="/twitter-video-downloader" className="text-primary hover:underline">
               Twitter (X)
             </Link>
             ,{" "}
-            <Link href="/tools/instagram-reels-downloader" className="text-primary hover:underline">
+            <Link href="/instagram-reels-downloader" className="text-primary hover:underline">
               Instagram
             </Link>
             ,{" "}
-            <Link href="/tools/tiktok-video-downloader" className="text-primary hover:underline">
+            <Link href="/tiktok-video-downloader" className="text-primary hover:underline">
               TikTok
             </Link>
             ,{" "}
-            <Link href="/tools/facebook-video-downloader" className="text-primary hover:underline">
+            <Link href="/facebook-video-downloader" className="text-primary hover:underline">
               Facebook
             </Link>
             ,{" "}
-            <Link href="/tools/vimeo-video-downloader" className="text-primary hover:underline">
+            <Link href="/vimeo-video-downloader" className="text-primary hover:underline">
               Vimeo
             </Link>
             ,{" "}
-            <Link href="/tools/reddit-video-downloader" className="text-primary hover:underline">
+            <Link href="/reddit-video-downloader" className="text-primary hover:underline">
               Reddit
             </Link>
             , and{" "}
-            <Link href="/tools/soundcloud-downloader" className="text-primary hover:underline">
+            <Link href="/soundcloud-downloader" className="text-primary hover:underline">
               SoundCloud
             </Link>
             . Video downloads are available in MP4 and WebM formats with quality options ranging
