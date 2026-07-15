@@ -349,6 +349,7 @@ async function fetchMediaMetadata(
         return {
           title: `Instagram Post (${shortcode})`,
           author: "Instagram Creator",
+          thumbnail: `https://www.instagram.com/p/${shortcode}/media/?size=l`,
         };
       }
       return null;
@@ -494,21 +495,31 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
           hasMedia = true;
         } else if (val.status === "picker" && val.picker && Array.isArray(val.picker)) {
           // Handle carousel posts (like TikTok/Instagram image carousels)
+          const hasVideoInPicker = val.picker.some((item) => item.type === "video");
+          
+          // Find first photo to use as thumbnail preview
+          const firstPhoto = val.picker.find((item) => item.type === "photo");
+          if (firstPhoto && (!thumbnail || thumbnail.includes("placehold.co"))) {
+            thumbnail = firstPhoto.url;
+          }
+
           val.picker.forEach((item: { url: string; type: string; filename?: string }, idx: number) => {
+            // If the post has a video, don't show the static cover photos as download options.
+            // Only show the video files for download.
+            if (hasVideoInPicker && item.type === "photo") {
+              return;
+            }
+
             formats.push({
-              quality: `Item ${idx + 1} (${item.type})`,
+              quality: hasVideoInPicker ? "HD Video" : `Image ${idx + 1}`,
               format: item.type === "photo" ? "JPG" : "MP4",
               size: "Download",
               hasAudio: item.type !== "photo",
               url: item.url,
               filename: item.filename || `item-${idx + 1}.${item.type === "photo" ? "jpg" : "mp4"}`,
             });
-            // Use the first image from the picker as the thumbnail if we don't have one
-            if (idx === 0 && item.type === "photo" && (!thumbnail || thumbnail.includes("placehold.co"))) {
-              thumbnail = item.url;
-            }
           });
-          hasMedia = true;
+          hasMedia = formats.length > 0;
         }
       }
 
