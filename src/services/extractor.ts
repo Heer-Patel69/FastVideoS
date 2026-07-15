@@ -24,6 +24,11 @@ function extractYoutubeId(url: string): string | null {
   return match && match[2].length === 11 ? match[2] : null;
 }
 
+function extractTweetId(url: string): string | null {
+  const match = url.match(/\/status\/(\d+)/);
+  return match ? match[1] : null;
+}
+
 function formatDuration(seconds: number): string {
   if (!seconds) return "0:00";
   const mins = Math.floor(seconds / 60);
@@ -69,6 +74,120 @@ async function callCobalt(url: string, downloadMode: "auto" | "audio") {
   return responseData;
 }
 
+// Tokenless metadata fetcher for Instagram, TikTok, and Twitter/X
+async function fetchMediaMetadata(
+  url: string,
+  platform: string
+): Promise<{ title?: string; author?: string; thumbnail?: string } | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
+  try {
+    if (platform === "instagram") {
+      const shortcodeMatch = url.match(/(?:\/p\/|\/reel\/|\/reels\/|\/tv\/)([A-Za-z0-9_-]+)/);
+      const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
+      if (!shortcode) return null;
+
+      let title = "";
+      let author = "";
+      let thumbnail = "";
+
+      // 1. Fetch tokenless oEmbed API for Title & Creator Username
+      try {
+        const oembedRes = await fetch(
+          `https://graph.facebook.com/v25.0/instagram_oembed?url=${encodeURIComponent(url)}`,
+          { signal: controller.signal }
+        );
+        if (oembedRes.ok) {
+          const oembedData = await oembedRes.json();
+          title = oembedData.title || "";
+          author = oembedData.author_name ? `@${oembedData.author_name}` : "";
+        }
+      } catch (e) {
+        console.warn("Instagram oEmbed failed:", e);
+      }
+
+      // 2. Fetch ddinstagram to extract the high-quality CDN image URL
+      try {
+        const ddRes = await fetch(`https://www.ddinstagram.com/reel/${shortcode}/`, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+          signal: controller.signal,
+        });
+        if (ddRes.ok) {
+          const html = await ddRes.text();
+          const ogImageMatch =
+            html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
+            html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+          if (ogImageMatch) {
+            thumbnail = ogImageMatch[1];
+          }
+        }
+      } catch (e) {
+        console.warn("Instagram ddinstagram thumbnail scraping failed:", e);
+      }
+
+      return {
+        title: title || undefined,
+        author: author || undefined,
+        thumbnail: thumbnail || undefined,
+      };
+    }
+
+    if (platform === "tiktok") {
+      // Fetch TikTok oEmbed API for Title, Author, and Thumbnail
+      const response = await fetch(
+        `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`,
+        { signal: controller.signal }
+      );
+      if (response.ok) {
+        const oembedData = await response.json();
+        return {
+          title: oembedData.title || undefined,
+          author: oembedData.author_name ? `@${oembedData.author_name}` : undefined,
+          thumbnail: oembedData.thumbnail_url || undefined,
+        };
+      }
+    }
+
+    if (platform === "twitter") {
+      const tweetId = extractTweetId(url);
+      if (!tweetId) return null;
+
+      // Fetch fxtwitter API for tweet text, author username, and media thumbnail
+      const response = await fetch(`https://api.fxtwitter.com/status/${tweetId}`, {
+        headers: {
+          "Accept": "application/json",
+        },
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.code === 200 && data.tweet) {
+          const tweet = data.tweet;
+          let thumbnail = "";
+          if (tweet.media && Array.isArray(tweet.media.all) && tweet.media.all.length > 0) {
+            thumbnail = tweet.media.all[0].thumbnail_url || tweet.media.all[0].url || "";
+          }
+          return {
+            title: tweet.text || undefined,
+            author: tweet.author?.name ? `${tweet.author.name} (@${tweet.author.screen_name})` : undefined,
+            thumbnail: thumbnail || undefined,
+          };
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Metadata fetch error:", error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  return null;
+}
+
 const platformAuthors: Record<string, string> = {
   youtube: "YouTube Creator",
   twitter: "X/Twitter User",
@@ -96,7 +215,6 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     if (videoId) {
       for (const instance of INVIDIOUS_INSTANCES) {
         try {
-          // Attempt to call Invidious instance (with 5 seconds timeout)
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -174,7 +292,18 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
   try {
     const formats: MediaFormat[] = [];
     let title = `${platform.charAt(0).toUpperCase() + platform.slice(1)} Media`;
-    const thumbnail = `https://placehold.co/1280x720/1a1a2e/3b82f6?text=${encodeURIComponent(platform.charAt(0).toUpperCase() + platform.slice(1))}`;
+    let thumbnail = `https://placehold.co/1280x720/1a1a2e/3b82f6?text=${encodeURIComponent(platform.charAt(0).toUpperCase() + platform.slice(1))}`;
+    let author = platformAuthors[platform] || "Creator";
+
+    // Attempt tokenless real metadata extraction (Instagram, TikTok, Twitter/X)
+    if (["instagram", "tiktok", "twitter"].includes(platform)) {
+      const meta = await fetchMediaMetadata(url, platform);
+      if (meta) {
+        if (meta.title) title = meta.title;
+        if (meta.author) author = meta.author;
+        if (meta.thumbnail) thumbnail = meta.thumbnail;
+      }
+    }
 
     if (platform === "soundcloud") {
       // SoundCloud is audio only
@@ -188,7 +317,7 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
           url: audioResult.url,
           filename: audioResult.filename || "audio.mp3",
         });
-        if (audioResult.filename) title = audioResult.filename;
+        if (audioResult.filename && !title.includes(" ")) title = audioResult.filename;
       }
     } else {
       // Other platforms: fetch video and audio in parallel
@@ -211,7 +340,9 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
             url: val.url,
             filename: val.filename || "video.mp4",
           });
-          if (val.filename) title = val.filename;
+          if (val.filename && (!title || title.startsWith("Instagram") || title.startsWith("Tiktok") || title.startsWith("Twitter"))) {
+            title = val.filename;
+          }
           hasMedia = true;
         } else if (val.status === "picker") {
           // Handle carousel posts (like TikTok/Instagram image carousels)
@@ -224,6 +355,10 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
               url: item.url,
               filename: item.filename || `item-${idx + 1}.${item.type === "photo" ? "jpg" : "mp4"}`,
             });
+            // Use the first image from the picker as the thumbnail if we don't have one
+            if (idx === 0 && item.type === "photo" && (!thumbnail || thumbnail.includes("placehold.co"))) {
+              thumbnail = item.url;
+            }
           });
           hasMedia = true;
         }
@@ -261,7 +396,7 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
       title,
       thumbnail,
       duration: platform === "soundcloud" ? "Audio" : "Video",
-      author: platformAuthors[platform] || "Creator",
+      author,
       formats,
     };
 
