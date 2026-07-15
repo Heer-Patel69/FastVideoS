@@ -28,7 +28,14 @@ export function useMediaExtract(): UseMediaExtractReturn {
         body: JSON.stringify({ url }),
       });
 
-      const result: ExtractResponse = await response.json();
+      const responseText = await response.text();
+      let result: ExtractResponse;
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        console.error("Non-JSON API Response:", responseText);
+        throw new Error(`Server returned invalid response format (HTTP ${response.status})`);
+      }
 
       if (!response.ok || !result.success) {
         throw new Error(result.error || "Failed to extract media information");
