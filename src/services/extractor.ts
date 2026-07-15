@@ -10,6 +10,14 @@ interface ExtractorResult {
 const COBALT_API_URL = process.env.COBALT_API_URL || "https://api.cobalt.tools";
 const COBALT_API_KEY = process.env.COBALT_API_KEY || "";
 
+// Memory caches for Cobalt and Invidious instance registries to scale under heavy concurrent load
+let cobaltCache: Record<string, string[]> = {};
+let cobaltCacheExpiresAt = 0;
+
+let invidiousCache: string[] = [];
+let invidiousCacheExpiresAt = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
 function extractYoutubeId(url: string): string | null {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
@@ -49,6 +57,11 @@ interface InvidiousInstanceMeta {
 }
 
 async function getHealthyInvidiousInstances(): Promise<string[]> {
+  const now = Date.now();
+  if (invidiousCache.length > 0 && now < invidiousCacheExpiresAt) {
+    return invidiousCache;
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -79,6 +92,8 @@ async function getHealthyInvidiousInstances(): Promise<string[]> {
           .slice(0, 12);
 
         if (instances.length > 0) {
+          invidiousCache = instances;
+          invidiousCacheExpiresAt = now + CACHE_TTL;
           return instances;
         }
       }
@@ -175,6 +190,11 @@ async function fetchFromInvidious(instance: string, videoId: string, url: string
 }
 
 async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
+  const now = Date.now();
+  if (cobaltCache[platform] && now < cobaltCacheExpiresAt) {
+    return cobaltCache[platform];
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
 
@@ -189,6 +209,8 @@ async function getWorkingCobaltInstances(platform: string): Promise<string[]> {
         const verifiedOpen = ["https://cobaltapi.cjs.nz", "https://rue-cobalt.xenon.zone"];
         const combined = Array.from(new Set([...verifiedOpen, ...activeInstances]));
         if (combined.length > 0) {
+          cobaltCache[platform] = combined;
+          cobaltCacheExpiresAt = now + CACHE_TTL;
           return combined;
         }
       }
