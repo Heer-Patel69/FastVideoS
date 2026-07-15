@@ -10,14 +10,6 @@ interface ExtractorResult {
 const COBALT_API_URL = process.env.COBALT_API_URL || "https://api.cobalt.tools";
 const COBALT_API_KEY = process.env.COBALT_API_KEY || "";
 
-const INVIDIOUS_INSTANCES = [
-  "yewtu.be",
-  "invidious.flokinet.to",
-  "inv.tux.im",
-  "vid.puffyan.us",
-  "invidious.io",
-];
-
 function extractYoutubeId(url: string): string | null {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
@@ -34,6 +26,59 @@ function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+interface InvidiousInstanceMeta {
+  api: boolean;
+  type: string;
+  uptime?: number;
+}
+
+async function getHealthyInvidiousInstances(): Promise<string[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+  try {
+    const res = await fetch("https://api.invidious.io/instances.json?sort_by=type,health", {
+      signal: controller.signal,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const instances = data
+          .filter((pair: [string, InvidiousInstanceMeta]) => {
+            const meta = pair[1];
+            return meta && meta.api === true && meta.type === "https";
+          })
+          .map((pair: [string, InvidiousInstanceMeta]) => {
+            try {
+              return new URL(pair[0]).hostname;
+            } catch {
+              return "";
+            }
+          })
+          .filter((hostname: string) => hostname !== "")
+          .slice(0, 10); // Use top 10 healthy instances
+
+        if (instances.length > 0) {
+          return instances;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch healthy Invidious instances:", error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  // Fallback to hardcoded list if API call fails
+  return [
+    "yewtu.be",
+    "invidious.flokinet.to",
+    "inv.tux.im",
+    "vid.puffyan.us",
+    "invidious.io",
+  ];
 }
 
 async function callCobalt(url: string, downloadMode: "auto" | "audio") {
@@ -213,7 +258,8 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
   if (platform === "youtube") {
     const videoId = extractYoutubeId(url);
     if (videoId) {
-      for (const instance of INVIDIOUS_INSTANCES) {
+      const instances = await getHealthyInvidiousInstances();
+      for (const instance of instances) {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000);
