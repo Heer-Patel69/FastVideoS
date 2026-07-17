@@ -59,7 +59,8 @@ export async function POST(request: Request) {
         },
       }
     );
-  } catch {
+  } catch (error) {
+    console.error("API Extract Error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
