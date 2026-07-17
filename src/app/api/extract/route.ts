@@ -3,8 +3,6 @@ import { extractRequestSchema } from "@/lib/schemas";
 import { extractMedia } from "@/services/extractor";
 import { checkRateLimit, getClientIp } from "@/services/rate-limiter";
 
-export const runtime = "edge";
-
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
