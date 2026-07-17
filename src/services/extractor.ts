@@ -525,13 +525,17 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
       if (videoResult.status === "fulfilled") {
         const val = videoResult.value;
         if (val.status === "tunnel" || val.status === "redirect") {
+          const isImage = (val.filename && /\.(jpe?g|png|webp|gif)$/i.test(val.filename)) ||
+                          (val.url && /\.(jpe?g|png|webp|gif)($|\?)/i.test(val.url)) ||
+                          (val.url && val.url.includes("/media/?size="));
+
           formats.push({
-            quality: "HD Video",
-            format: "MP4",
+            quality: isImage ? "Image Download" : "HD Video",
+            format: isImage ? "JPG" : "MP4",
             size: "Download",
-            hasAudio: true,
+            hasAudio: !isImage,
             url: val.url,
-            filename: val.filename || "video.mp4",
+            filename: val.filename || (isImage ? "image.jpg" : "video.mp4"),
           });
           if (val.filename && (!title || title.startsWith("Instagram") || title.startsWith("Tiktok") || title.startsWith("Twitter") || title.startsWith("Youtube") || title.startsWith("YouTube"))) {
             title = val.filename;
