@@ -11,7 +11,7 @@ const COBALT_API_URL = process.env.COBALT_API_URL || "https://api.cobalt.tools";
 const COBALT_API_KEY = process.env.COBALT_API_KEY || "";
 
 // Memory caches for Cobalt and Invidious instance registries to scale under heavy concurrent load
-let cobaltCache: Record<string, string[]> = {};
+const cobaltCache: Record<string, string[]> = {};
 let cobaltCacheExpiresAt = 0;
 
 let invidiousCache: string[] = [];
@@ -661,7 +661,8 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     }
 
     // --- INSTAGRAM OEMBED FALLBACK ---
-    if (platform === "instagram") {
+    const isInstagramReelUrl = platform === "instagram" && (url.includes("/reel/") || url.includes("/reels/") || url.includes("/tv/"));
+    if (platform === "instagram" && !isInstagramReelUrl) {
       const shortcodeMatch = url.match(/(?:\/p\/|\/reel\/|\/reels\/|\/tv\/)([A-Za-z0-9_-]+)/);
       const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
       if (shortcode) {
