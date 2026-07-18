@@ -37,6 +37,7 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1169163493596327"
           crossOrigin="anonymous"
         />
+        <meta name="google-adsense-account" content="ca-pub-1169163493596327" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
