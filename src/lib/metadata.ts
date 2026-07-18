@@ -114,7 +114,12 @@ export const defaultMetadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
   verification: {
     google: "google56f1319c653e0d2e",
