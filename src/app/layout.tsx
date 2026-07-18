@@ -7,6 +7,7 @@ import { defaultMetadata } from "@/lib/metadata";
 import {
   organizationSchema,
   webSiteSchema,
+  webPageSchema,
   renderJsonLd,
 } from "@/lib/structured-data";
 import { Toaster } from "sonner";
@@ -41,6 +42,19 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: renderJsonLd(webSiteSchema()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: renderJsonLd(
+              webPageSchema({
+                name: "FastVideoS — Free Online Media Downloader",
+                description:
+                  "Download and extract media from YouTube, Twitter, Instagram, TikTok, and more. Ultra-fast, free, no sign-up required.",
+                url: "/",
+              })
+            ),
           }}
         />
       </head>

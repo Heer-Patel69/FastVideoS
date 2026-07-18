@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/metadata";
 import { Hero } from "@/components/sections/hero";
 import { SupportedPlatforms } from "@/components/sections/supported-platforms";
 import { Features } from "@/components/sections/features";
@@ -12,6 +14,13 @@ import {
   faqSchema,
   renderJsonLd,
 } from "@/lib/structured-data";
+
+export const metadata: Metadata = generatePageMetadata({
+  title: "FastVideoS — Free Online Media Downloader",
+  description:
+    "Download and extract media from YouTube, Twitter, Instagram, TikTok, and more. Ultra-fast, free, no sign-up required.",
+  path: "/",
+});
 
 const homeFaqs = [
   {

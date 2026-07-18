@@ -1,13 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getAllPlatformSlugs } from "@/lib/platforms";
-import { getAllPosts } from "@/lib/blog";
+import { getAllPosts, getCategories } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "fastvideos.com";
-  const proto = request.headers.get("x-forwarded-proto") || "https";
-  const baseUrl = `${proto}://${host}`;
+export async function GET() {
+  const baseUrl = "https://fastvideos.univoid.tech";
 
   const staticPages = [
     { path: "", priority: "1.0", changefreq: "daily" },
@@ -22,6 +20,7 @@ export async function GET(request: NextRequest) {
 
   const tools = getAllPlatformSlugs();
   const posts = getAllPosts();
+  const categories = getCategories();
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -55,6 +54,17 @@ export async function GET(request: NextRequest) {
     <lastmod>${new Date(post.date).toISOString().split("T")[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>`
+    )
+    .join("")}
+  ${categories
+    .map(
+      (cat) => `
+  <url>
+    <loc>${baseUrl}/blog/category/${cat.slug}</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>`
     )
     .join("")}

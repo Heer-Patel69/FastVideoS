@@ -31,7 +31,9 @@ export function generatePageMetadata({
     title,
     description,
     metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || "https://fastvideos.com"
+      process.env.NODE_ENV === "production"
+        ? "https://fastvideos.univoid.tech"
+        : (process.env.NEXT_PUBLIC_SITE_URL || "https://fastvideos.univoid.tech")
     ),
     alternates: {
       canonical: url,
@@ -72,7 +74,9 @@ export const defaultMetadata: Metadata = {
   },
   description: DEFAULT_DESCRIPTION,
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://fastvideos.com"
+    process.env.NODE_ENV === "production"
+      ? "https://fastvideos.univoid.tech"
+      : (process.env.NEXT_PUBLIC_SITE_URL || "https://fastvideos.univoid.tech")
   ),
   alternates: {
     canonical: "/",

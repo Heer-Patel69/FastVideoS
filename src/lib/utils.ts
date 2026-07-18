@@ -41,7 +41,13 @@ export function estimateReadingTime(text: string): string {
 }
 
 export function absoluteUrl(path: string): string {
+  if (process.env.NODE_ENV === "production") {
+    return `https://fastvideos.univoid.tech${path}`;
+  }
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://fastvideos.com";
+    envUrl && !envUrl.includes("vercel.app")
+      ? envUrl
+      : "https://fastvideos.univoid.tech";
   return `${baseUrl}${path}`;
 }

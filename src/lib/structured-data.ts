@@ -158,6 +158,32 @@ export function itemListSchema(
   };
 }
 
+export function webPageSchema(page: {
+  name: string;
+  description: string;
+  url: string;
+  datePublished?: string;
+  dateModified?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: page.name,
+    description: page.description,
+    url: absoluteUrl(page.url),
+    ...(page.datePublished && { datePublished: page.datePublished }),
+    ...(page.dateModified && { dateModified: page.dateModified }),
+    publisher: {
+      "@type": "Organization",
+      name: "FastVideoS",
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/logo.png"),
+      },
+    },
+  };
+}
+
 export function renderJsonLd(schema: Record<string, unknown>): string {
   return JSON.stringify(schema).replace(/</g, "\\u003c");
 }
