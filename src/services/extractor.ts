@@ -305,7 +305,7 @@ async function callCobaltInstance(instanceUrl: string, url: string, downloadMode
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4500); // 4.5s timeout per instance
+  const timeoutId = setTimeout(() => controller.abort(), 9500); // 9.5s timeout per instance
 
   try {
     const response = await fetch(instanceUrl, {
@@ -707,7 +707,9 @@ export async function extractMedia(url: string): Promise<ExtractorResult> {
     // Provide a helpful error warning about Turnstile/CF blocks on public instance
     const errorMessage = error instanceof Error ? error.message : "Failed to communicate with media extractor service.";
     let friendlyError = errorMessage;
-    if (COBALT_API_URL === "https://api.cobalt.tools") {
+    if (errorMessage === "This operation was aborted" || errorMessage.toLowerCase().includes("aborted") || errorMessage.toLowerCase().includes("timeout")) {
+      friendlyError = "The extraction request timed out. Public download services are currently slow or rate-limiting requests. Please try again in a few seconds.";
+    } else if (COBALT_API_URL === "https://api.cobalt.tools") {
       friendlyError += " Note: The public instance (api.cobalt.tools) might be rate-limited or blocked by bot protection. Please configure a self-hosted instance using the COBALT_API_URL environment variable.";
     }
 
