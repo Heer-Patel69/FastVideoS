@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 
 const footerLinks = {
   youtube: [
@@ -123,9 +123,13 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
-              <Zap className="h-3 w-3 text-primary-foreground" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="FastVideoS Logo"
+              width={24}
+              height={24}
+              className="rounded-md object-contain"
+            />
             <span className="text-sm font-semibold">
               Fast<span className="text-primary">VideoS</span>
             </span>

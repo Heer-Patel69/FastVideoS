@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Zap, ChevronDown } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,9 +34,13 @@ export function Navbar() {
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
             aria-label="FastVideoS home"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="FastVideoS Logo"
+              width={32}
+              height={32}
+              className="rounded-lg object-contain"
+            />
             <span className="text-lg font-bold tracking-tight">
               Fast<span className="text-primary">VideoS</span>
             </span>
